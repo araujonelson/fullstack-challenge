@@ -3,20 +3,19 @@ name: CI Pipeline
 on: 
   pull_request:
     branches:
-      -main 
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
-  steps: 
+    steps:
     - name: Check out code
-    uses: actions/checkout@v2
+      uses: actions/checkout@v2
 
     - name: Set up Node.js
-    uses: actions/setup-node@v2
-    with:
-      node-version: '14'
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
 
     - name: Install dependencies
       run: npm install

@@ -57,15 +57,15 @@ jobs:
                 : '❌ Build failed! Please check the logs.'
             });
 
-    auto-approve:
-      needs: build
-      if: ${{ needs.build.result == 'success' }}
-      runs-on: ubuntu-latest
-      permissions:
-        pull-requests: write
+  auto-approve:
+    needs: build
+    if: ${{ needs.build.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
 
-      steps:
-        - name: Auto-approve PR
-          uses: hmarr/auto-approve-action@v4
-          with:
-            github-token: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Auto-approve PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

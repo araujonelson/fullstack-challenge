@@ -27,9 +27,7 @@ jobs:
           TARGET="${{ github.event.pull_request.base.ref }}"
           SOURCE="${{ github.event.pull_request.head.ref }}"
           echo "🔍 Validating: $SOURCE → $TARGET"
-          echo "Testing regex: $SOURCE =~ ^(feat|bugfix)/"
-          [[ "$SOURCE" =~ ^(feat|bugfix)/ ]] && echo "✅ Regex matched" || echo "❌ Regex failed"
-          [[ "$TARGET" == "devel" && ! "$SOURCE" =~ ^(feat|bugfix)/ ]] && echo "❌ Only feat/* or bugfix/* → devel" && exit 1
+          [[ "$TARGET" == "devel" && ! "$SOURCE" =~ ^feat/ && ! "$SOURCE" =~ ^bugfix/ ]] && echo "❌ Only feat/* or bugfix/* → devel" && exit 1
           [[ "$TARGET" == "stage" && "$SOURCE" != "devel" ]] && echo "❌ Only devel → stage" && exit 1
           [[ "$TARGET" == "prod" && "$SOURCE" != "stage" ]] && echo "❌ Only stage → prod" && exit 1
 
@@ -74,6 +72,6 @@ jobs:
               repo:        context.repo.repo,
               issue_number: context.issue.number,
               body: ok
-                ? '✅ Build succeeded!! All checks passed.'
+                ? '✅ Build succeeded! All checks passed.'
                 : '❌ Build failed! Please check the logs.'
             });

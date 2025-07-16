@@ -49,7 +49,6 @@ jobs:
           path: app
 
       - name: Setup Node.js
-        working-directory: app
         uses: actions/setup-node@v4
         with:
           node-version: '15'

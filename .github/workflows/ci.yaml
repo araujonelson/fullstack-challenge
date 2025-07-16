@@ -26,11 +26,18 @@ jobs:
         run: |
           TARGET="${{ github.event.pull_request.base.ref }}"
           SOURCE="${{ github.event.pull_request.head.ref }}"
-          case "$TARGET" in
-            devel) [[ "$SOURCE" =~ ^feat/ ]] || [[ "$SOURCE" =~ ^bugfix/ ]] || (echo "❌ Only feat/* or bugfix/* → devel" && exit 1) ;;
-            stage) [[ "$SOURCE" == "devel" ]] || (echo "❌ Only devel → stage" && exit 1) ;;
-            prod)  [[ "$SOURCE" == "stage" ]] || (echo "❌ Only stage → prod" && exit 1) ;;
-          esac
+          if [[ "$TARGET" == "devel" && ! "$SOURCE" =~ ^feat/ && ! "$SOURCE" =~ ^bugfix/ ]]; then
+            echo "❌ Only feat/* or bugfix/* → devel"
+            exit 1
+          fi
+          if [[ "$TARGET" == "stage" && "$SOURCE" != "devel" ]]; then
+            echo "❌ Only devel → stage"
+            exit 1
+          fi
+          if [[ "$TARGET" == "prod" && "$SOURCE" != "stage" ]]; then
+            echo "❌ Only stage → prod"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

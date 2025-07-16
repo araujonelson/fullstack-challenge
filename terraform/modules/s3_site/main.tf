@@ -8,8 +8,8 @@ resource "aws_s3_bucket" "site" {
 }
 
 resource "aws_s3_bucket_policy" "site" {
-  count  = var.cloudfront_distribution_arn != "" ? 1 : 0
   bucket = aws_s3_bucket.site.id
+  depends_on = [aws_s3_bucket.site]
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

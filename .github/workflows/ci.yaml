@@ -49,7 +49,7 @@ jobs:
     if: ${{ always() }}
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      pull-requests: write
 
     steps:
       - name: Comment on PR

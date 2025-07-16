@@ -1,4 +1,4 @@
-name: CD: Terraform + App Deploy
+name: CD Terraform + App Deploy
 on:
   repository_dispatch:
     types: [deploy]

@@ -1,0 +1,75 @@
+name: CD: Terraform + App Deploy
+on:
+  repository_dispatch:
+    types: [deploy]
+
+permissions:
+  contents: read
+  id-token: write
+  issues: write
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      TF_LOG: info
+    outputs:
+      site_bucket: ${{ steps.read.outputs.site_bucket }}
+      role_arn:    ${{ steps.read.outputs.role_arn }}
+
+    steps:
+      - name: Checkout infra
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Init & Select Workspace
+        run: |
+          terraform init
+          terraform workspace select "${{ github.event.client_payload.environment }}" \
+            || terraform workspace new "${{ github.event.client_payload.environment }}"
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply tfplan
+
+      - name: Read outputs
+        id: read
+        run: |
+          echo "site_bucket=$(terraform output -raw site_bucket)" >> "$GITHUB_OUTPUT"
+          echo "role_arn=$(terraform output -raw gha_deploy_role_arn)" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: terraform
+    runs-on: ubuntu-latest
+    if: needs.terraform.outputs.site_bucket != ''
+
+    steps:
+      - name: Checkout App at SHA
+        uses: actions/checkout@v4
+        with:
+          repository: my-org/app-repo
+          ref:        ${{ github.event.client_payload.app_sha }}
+          path:       app
+
+      - name: Build App
+        working-directory: app
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: |
+          npm install
+          npm run build
+
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.terraform.outputs.role_arn }}
+          aws-region:     us-east-1
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync app/build s3://${{ needs.terraform.outputs.site_bucket }} --delete

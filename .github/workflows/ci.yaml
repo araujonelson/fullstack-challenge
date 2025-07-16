@@ -1,71 +1,68 @@
-name: CI Pipeline
-
-on: 
+name: PR CI
+on:
   pull_request:
-    branches:
-      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Checkout PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '15'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm install
 
-    - name: Run linter
-      run: npm run lint
+      - name: Lint (ESLint)
+        run: npm run lint
 
-    - name: Run formatter
-      run: npm run prettier -- --write
+      - name: Format (Prettier)
+        run: npm run prettier -- --write
 
-    - name: Run tests
-      env: 
-        CI: true
-      run: npm run test
+      - name: Test (Jest)
+        env:
+          CI: true
+        run: npm run test
 
-    - name: Build project
-      run: npm run build
+      - name: Build
+        run: npm run build
 
   comment:
     needs: build
     if: ${{ always() }}
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      issues: write
 
     steps:
       - name: Comment on PR
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const ok = '${{ needs.build.result }}' === 'success';
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner:       context.repo.owner,
+              repo:        context.repo.repo,
               issue_number: context.issue.number,
               body: ok
                 ? '✅ Build succeeded! All checks passed.'
                 : '❌ Build failed! Please check the logs.'
             });
-
-  auto-approve:
-    needs: build
-    if: ${{ needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-
-    steps:
-      - name: Auto-approve PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}

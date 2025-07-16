@@ -22,22 +22,23 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Validate Branching Strategy
+      - name: Check devel branch source
+        if: github.base_ref == 'devel' && ! startsWith(github.head_ref, 'feat/') && ! startsWith(github.head_ref, 'bugfix/')
         run: |
-          TARGET="${{ github.event.pull_request.base.ref }}"
-          SOURCE="${{ github.event.pull_request.head.ref }}"
-          if [[ "$TARGET" == "devel" && ! "$SOURCE" =~ ^feat/ && ! "$SOURCE" =~ ^bugfix/ ]]; then
-            echo "❌ Only feat/* or bugfix/* → devel"
-            exit 1
-          fi
-          if [[ "$TARGET" == "stage" && "$SOURCE" != "devel" ]]; then
-            echo "❌ Only devel → stage"
-            exit 1
-          fi
-          if [[ "$TARGET" == "prod" && "$SOURCE" != "stage" ]]; then
-            echo "❌ Only stage → prod"
-            exit 1
-          fi
+          echo "❌ Only feat/* or bugfix/* → devel"
+          exit 1
+
+      - name: Check stage branch source
+        if: github.base_ref == 'stage' && github.head_ref != 'devel'
+        run: |
+          echo "❌ Only devel → stage"
+          exit 1
+
+      - name: Check prod branch source
+        if: github.base_ref == 'prod' && github.head_ref != 'stage'
+        run: |
+          echo "❌ Only stage → prod"
+          exit 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

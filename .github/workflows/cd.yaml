@@ -1,8 +1,6 @@
 name: CD Deploy
 on:
-  workflow_run:
-    workflows: ["PR CI"]
-    types: [completed]
+  push:
     branches: [devel, stage, prod]
 
 permissions:
@@ -13,7 +11,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
-      ENVIRONMENT: ${{ github.event.workflow_run.head_branch }}
+      ENVIRONMENT: ${{ github.ref_name }}
     outputs:
       site_bucket: ${{ steps.read.outputs.site_bucket }}
 
@@ -23,7 +21,8 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       - name: Setup Terraform

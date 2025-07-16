@@ -9,7 +9,7 @@ output "cdn_domain" {
   value       = module.cloudfront.cdn_domain
 }
 
-output "gha_deploy_role_arn" {
-  description = "IAM Role ARN that GitHub Actions should assume via OIDC"
-  value       = module.iam.gha_deploy_role_arn
-}
+# output "gha_deploy_role_arn" {
+#   description = "IAM Role ARN that GitHub Actions should assume via OIDC"
+#   value       = module.iam.gha_deploy_role_arn
+# }

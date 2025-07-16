@@ -5,10 +5,7 @@ locals {
   log_bucket  = "my-app-${local.env}-logs"
 }
 
-// 1) IAM / OIDC Role (so GitHub Actions can assume it)
-module "iam" {
-  source = "./modules/iam"
-}
+
 
 // 2) S3 bucket to hold your built static files (private ACL)
 module "s3_site" {
